@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -10,10 +10,11 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/admin" element={<AdminDashboard />} />
-        <Route path='/teacher' element={<TeacherDashboard/>} />
-        <Route path='/student' element={<StudentDashboard/>} />
-        <Route path='/parent' element={<ParentDashboard/>} />
+        <Route path='/teacher' element={<TeacherDashboard />} />
+        <Route path='/student' element={<StudentDashboard />} />
+        <Route path='/parent' element={<ParentDashboard />} />
         <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
