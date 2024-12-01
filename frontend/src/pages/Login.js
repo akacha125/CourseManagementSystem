@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DarkMode from "../components/DarkMode";
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -45,34 +46,42 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px' }}>
-      <h2>Giriş Yap</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Kullanıcı Adı:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Şifre:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Giriş Yap</button>
-      </form>
+    <div className="container d-flex justify-content-center align-items-center vh-100">
+      <DarkMode/>
+      <div className="card shadow p-4" style={{ width: '400px' }}>
+        <h2 className="text-center mb-4">Giriş Yap</h2>
+        {error && <p className="text-danger">{error}</p>}
+        <form onSubmit={handleLogin}>
+          {/* Kullanıcı Adı */}
+          <div className="mb-3">
+            <label htmlFor="username" className="form-label">Kullanıcı Adı</label>
+            <input
+              type="text"
+              className="form-control"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          {/* Şifre */}
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">Şifre</label>
+            <input
+              type="password"
+              className="form-control"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          {/* Giriş Butonu */}
+          <button type="submit" className="btn btn-primary w-100">Giriş Yap</button>
+        </form>
+      </div>
     </div>
   );
 }
 
 export default Login;
-
-
