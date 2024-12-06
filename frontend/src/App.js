@@ -4,7 +4,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import ParentDashboard from './pages/ParentDashboard';
-import Login from './pages/Login';
+import Login from './pages/Login/Login';
 
 function App() {
   return (
