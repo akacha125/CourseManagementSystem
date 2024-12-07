@@ -1,6 +1,7 @@
 import React from 'react';
-import { FaHome, FaUserGraduate, FaChalkboardTeacher, FaUserFriends, FaUserPlus  } from 'react-icons/fa';
-import { PiNoteFill, PiNotePencilBold  } from "react-icons/pi";
+import { FaHome, FaUserGraduate, FaChalkboardTeacher, FaUserFriends, FaUserPlus } from 'react-icons/fa';
+import { PiNoteFill, PiNotePencilBold } from "react-icons/pi";
+import { Link } from "react-router-dom";
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -13,39 +14,39 @@ const Sidebar = () => {
             </div>
             <ul className="nav flex-column">
                 <li className="nav-item mb-4">
-                    <a href="#dashboard" className="nav-link text-white d-flex align-items-center">
+                    <Link to="/admin/mainPanel" className="nav-link text-white d-flex align-items-center">
                         <FaHome className="me-3 fs-3" /> Dashboard
-                    </a>
+                    </Link>
                 </li>
                 <li className="nav-item mb-2">
-                    <a href="#students" className="nav-link text-white d-flex align-items-center">
+                    <Link to="/admin/studentsList" className="nav-link text-white d-flex align-items-center">
                         <FaUserGraduate className="me-3 fs-3" /> Öğrenciler
-                    </a>
+                    </Link>
                 </li>
                 <li className="nav-item mb-2">
-                    <a href="#teachers" className="nav-link text-white d-flex align-items-center">
+                    <Link to="/admin/teachersList" className="nav-link text-white d-flex align-items-center">
                         <FaChalkboardTeacher className="me-3 fs-3" /> Öğretmenler
-                    </a>
+                    </Link>
                 </li>
                 <li className="nav-item mb-2">
-                    <a href="#parents" className="nav-link text-white d-flex align-items-center">
-                        <FaUserFriends  className="me-3 fs-3" /> Veliler
-                    </a>
+                    <Link to="/admin/parentsList" className="nav-link text-white d-flex align-items-center">
+                        <FaUserFriends className="me-3 fs-3" /> Veliler
+                    </Link>
                 </li>
                 <li className="nav-item mb-4">
-                    <a href="#exams" className="nav-link text-white d-flex align-items-center">
-                        <PiNoteFill   className="me-3 fs-3" /> Sınavlar
-                    </a>
+                    <Link to="/admin/examsList" className="nav-link text-white d-flex align-items-center">
+                        <PiNoteFill className="me-3 fs-3" /> Sınavlar
+                    </Link>
                 </li>
                 <li className="nav-item mb-2">
-                    <a href="#newUser" className="nav-link text-white d-flex align-items-center">
-                        <FaUserPlus   className="me-3 fs-3" /> Yeni kullanıcı
-                    </a>
+                    <Link to="/admin/newUser" className="nav-link text-white d-flex align-items-center">
+                        <FaUserPlus className="me-3 fs-3" /> Yeni kullanıcı
+                    </Link>
                 </li>
                 <li className="nav-item mb-2">
-                    <a href="#newExamPoints" className="nav-link text-white d-flex align-items-center">
-                        <PiNotePencilBold   className="me-3 fs-3" /> Yeni sonuçlar
-                    </a>
+                    <Link to="/admin/newExam" className="nav-link text-white d-flex align-items-center">
+                        <PiNotePencilBold className="me-3 fs-3" /> Yeni sonuçlar
+                    </Link>
                 </li>
             </ul>
         </div>
