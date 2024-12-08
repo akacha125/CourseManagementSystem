@@ -28,7 +28,7 @@ function Login() {
         // Kullanıcıyı role göre yönlendir
         const decodedToken = JSON.parse(atob(data.token.split('.')[1]));
         if (decodedToken.role === 'admin') {
-          navigate('/admin');
+          navigate('/admin/mainPanel');
         } else if (decodedToken.role === 'teacher') {
           navigate('/teacher');
         } else if (decodedToken.role === 'student') {

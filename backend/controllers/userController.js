@@ -65,17 +65,40 @@ const addUser = (req, res) => {
   });
 };
 
-
-// Kullanıcıları listeleme
-const getUsers = (req, res) => {
-  const query = 'SELECT * FROM users';
-  db.execute(query, (err, result) => {
+// Öğrencileri listeleme
+const getStudents = (req, res) => {
+  const query = 'SELECT * FROM users WHERE role = ?'; 
+  db.execute(query, ['student'], (err, result) => {
     if (err) {
-      console.error('Kullanıcıları getirirken hata oluştu:', err);
-      return res.status(500).json({ message: 'Kullanıcıları getirme sırasında bir hata oluştu.' });
+      console.error('Öğrencileri getirirken hata oluştu:', err);
+      return res.status(500).json({ message: 'Öğrencileri getirme sırasında bir hata oluştu.' });
     }
     res.status(200).json(result);
   });
 };
 
-module.exports = { addUser, getUsers };
+// Öğretmenleri listeleme
+const getTeachers = (req, res) => {
+  const query = 'SELECT * FROM users WHERE role = ?'; 
+  db.execute(query, ['teacher'], (err, result) => {
+    if (err) {
+      console.error('Öğretmenleri getirirken hata oluştu:', err);
+      return res.status(500).json({ message: 'Öğretmenleri getirme sırasında bir hata oluştu.' });
+    }
+    res.status(200).json(result);
+  });
+};
+
+// Velileri listeleme
+const getParents = (req, res) => {
+  const query = 'SELECT * FROM users WHERE role = ?'; 
+  db.execute(query, ['parent'], (err, result) => {
+    if (err) {
+      console.error('Velileri getirirken hata oluştu:', err);
+      return res.status(500).json({ message: 'Velileri getirme sırasında bir hata oluştu.' });
+    }
+    res.status(200).json(result);
+  });
+};
+
+module.exports = { addUser, getStudents, getTeachers, getParents };
