@@ -33,9 +33,7 @@ function Login() {
           navigate('/teacher');
         } else if (decodedToken.role === 'student') {
           navigate('/student');
-        } else if (decodedToken.role === 'parent') {
-          navigate('/parent');
-        }
+        } 
       } else {
         const errorMessage = await response.text();
         setError(errorMessage);

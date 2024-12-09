@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaUserGraduate, FaChalkboardTeacher, FaUserFriends, FaUserPlus } from 'react-icons/fa';
+import { FaHome, FaUserGraduate, FaChalkboardTeacher, FaUserPlus } from 'react-icons/fa';
 import { PiNoteFill, PiNotePencilBold } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import './Sidebar.css';
@@ -26,11 +26,6 @@ const Sidebar = () => {
                 <li className="nav-item mb-2">
                     <Link to="/admin/teachersList" className="nav-link text-white d-flex align-items-center">
                         <FaChalkboardTeacher className="me-3 fs-3" /> Öğretmenler
-                    </Link>
-                </li>
-                <li className="nav-item mb-2">
-                    <Link to="/admin/parentsList" className="nav-link text-white d-flex align-items-center">
-                        <FaUserFriends className="me-3 fs-3" /> Veliler
                     </Link>
                 </li>
                 <li className="nav-item mb-4">

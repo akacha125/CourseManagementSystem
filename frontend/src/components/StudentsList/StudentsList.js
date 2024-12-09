@@ -52,9 +52,9 @@ const StudentsList = () => {
                 <th>Kullanıcı Adı</th>
                 <th>Ad Soyad</th>
                 <th>Telefon Numarası</th>
-                <th>Sınıf</th>
                 <th>Okul Numarası</th>
-                <th>Yıllık Ücret</th>
+                <th>Sınav Türü</th>
+                <th>Sınıf</th>
               </tr>
             </thead>
             <tbody>
@@ -63,9 +63,9 @@ const StudentsList = () => {
                   <td>{student.username}</td>
                   <td>{student.fullname}</td>
                   <td>{student.phoneNo}</td>
-                  <td>{student.class}</td>
                   <td>{student.studentNo}</td>
-                  <td>{student.yearlyFee} ₺</td>
+                  <td>{student.exam}</td>
+                  <td>{student.class}</td>
                 </tr>
               ))}
             </tbody>

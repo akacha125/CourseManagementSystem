@@ -9,18 +9,10 @@ const addUser = (req, res) => {
     role,
     fullname,
     phoneNo,
-    // Öğrenci alanları
     studentNo,
     class: studentClass,
-    yearlyFee,
-    // Öğretmen alanları
-    branch,
-    salary,
-    // Veli alanları
-    childFullname,
-    childSchoolNo,
-    address,
-    childYearlyFee,
+    exam,
+    branch
   } = req.body;
 
   // Şifreyi hash'leyin
@@ -32,8 +24,8 @@ const addUser = (req, res) => {
 
     // Kullanıcıyı Users tablosuna ekleyin
     const userQuery = `
-      INSERT INTO users (username, password, fullname, phoneNo, role, studentNo, class, yearlyFee, branch, salary, childFullname, childSchoolNo, address, childYearlyFee) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (username, password, fullname, phoneNo, role, studentNo, exam, class, branch) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     // Parametreler
@@ -45,13 +37,8 @@ const addUser = (req, res) => {
       role,
       studentNo || null,  // Eğer öğrenci rolü değilse null
       studentClass || null,  // Eğer öğrenci rolü değilse null
-      yearlyFee || null,  // Eğer öğrenci rolü değilse null
+      exam || null,  // Eğer öğrenci rolü değilse null
       branch || null,  // Eğer öğretmen rolü değilse null
-      salary || null,  // Eğer öğretmen rolü değilse null
-      childFullname || null,  // Eğer veli rolü değilse null
-      childSchoolNo || null,  // Eğer veli rolü değilse null
-      address || null,  // Eğer veli rolü değilse null
-      childYearlyFee || null  // Eğer veli rolü değilse null
     ];
 
     db.execute(userQuery, params, (err, result) => {
@@ -64,6 +51,24 @@ const addUser = (req, res) => {
     });
   });
 };
+
+// Öğrenci Numarasının Benzersizliğini Kontrol Et
+const checkStudentNoUnique = (req, res) => {
+  const { studentNo } = req.body;
+
+  const query = 'SELECT COUNT(*) AS count FROM users WHERE studentNo = ?';
+  db.execute(query, [studentNo], (err, result) => {
+    if (err) {
+      console.error('Öğrenci numarasını kontrol ederken hata oluştu:', err);
+      return res.status(500).json({ message: 'Hata oluştu.' });
+    }
+
+    // Benzersiz olup olmadığını kontrol et
+    const isUnique = result[0].count === 0;
+    res.status(200).json({ isUnique });
+  });
+};
+
 
 // Öğrencileri listeleme
 const getStudents = (req, res) => {
@@ -89,16 +94,5 @@ const getTeachers = (req, res) => {
   });
 };
 
-// Velileri listeleme
-const getParents = (req, res) => {
-  const query = 'SELECT * FROM users WHERE role = ?'; 
-  db.execute(query, ['parent'], (err, result) => {
-    if (err) {
-      console.error('Velileri getirirken hata oluştu:', err);
-      return res.status(500).json({ message: 'Velileri getirme sırasında bir hata oluştu.' });
-    }
-    res.status(200).json(result);
-  });
-};
 
-module.exports = { addUser, getStudents, getTeachers, getParents };
+module.exports = { addUser, checkStudentNoUnique, getStudents, getTeachers };

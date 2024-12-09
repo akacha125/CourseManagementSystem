@@ -53,7 +53,6 @@ const TeachersList = () => {
                 <th>Ad Soyad</th>
                 <th>Telefon Numarası</th>
                 <th>Branşı</th>
-                <th>Maaşı</th>
               </tr>
             </thead>
             <tbody>
@@ -63,7 +62,6 @@ const TeachersList = () => {
                   <td>{teacher.fullname}</td>
                   <td>{teacher.phoneNo}</td>
                   <td>{teacher.branch}</td>
-                  <td>{teacher.salary} ₺</td>
                 </tr>
               ))}
             </tbody>
