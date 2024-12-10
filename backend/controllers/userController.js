@@ -94,5 +94,25 @@ const getTeachers = (req, res) => {
   });
 };
 
+// Öğrencileri silme
+const deleteStudents = (req, res) => {
+  const { ids } = req.body; // Gelen id'ler
 
-module.exports = { addUser, checkStudentNoUnique, getStudents, getTeachers };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Silinecek öğrenci seçilmedi.' });
+  }
+
+  const query = `DELETE FROM users WHERE id IN (${ids.map(() => '?').join(',')})`;
+
+  db.execute(query, ids, (err, result) => {
+    if (err) {
+      console.error('Öğrencileri silerken hata oluştu:', err);
+      return res.status(500).json({ message: 'Silme işlemi sırasında hata oluştu.' });
+    }
+
+    res.status(200).json({ message: `${result.affectedRows} öğrenci silindi.` });
+  });
+};
+
+
+module.exports = { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents  };
