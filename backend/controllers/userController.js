@@ -114,5 +114,33 @@ const deleteStudents = (req, res) => {
   });
 };
 
+// Öğretmenleri silme
+const deleteTeachers = (req, res) => {
+  const { ids } = req.body; // Gelen id'ler
 
-module.exports = { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents  };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: 'Geçersiz id listesi' });
+  }
+
+  // id'leri SQL sorgusu için hazırla
+  const placeholders = ids.map(() => '?').join(',');
+  const query = `DELETE FROM users WHERE id IN (${placeholders}) AND role = 'teacher'`;
+
+  db.execute(query, ids, (err, result) => {
+    if (err) {
+      console.error('Öğretmenleri silerken hata oluştu:', err);
+      return res.status(500).json({ message: 'Öğretmenleri silme sırasında bir hata oluştu.' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Silinecek öğretmen bulunamadı.' });
+    }
+
+    res.status(200).json({ 
+      message: 'Öğretmenler başarıyla silindi',
+      deletedCount: result.affectedRows 
+    });
+  });
+};
+
+module.exports = { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents, deleteTeachers };

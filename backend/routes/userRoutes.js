@@ -1,5 +1,5 @@
 const express = require('express');
-const { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents  } = require('../controllers/userController');
+const { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents, deleteTeachers } = require('../controllers/userController');
 
 const router = express.Router();
 
@@ -17,5 +17,8 @@ router.get('/teachers', getTeachers);
 
 //Ögrencileri silme
 router.post('/deleteStudents', deleteStudents);
+
+//Öğretmenleri silme
+router.post('/deleteTeachers', deleteTeachers);
 
 module.exports = router;

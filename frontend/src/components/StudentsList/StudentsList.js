@@ -89,7 +89,7 @@ const StudentsList = () => {
         <div className="card-header text-white text-center p-2">
           <h4>Öğrenci Listesi</h4>
         </div>
-        <div className="card-body">
+        <div className="card-body ps-4 pe-4">
           {/* Arama Kutuları */}
           <div className="mb-3">
             <div className="row g-3">
@@ -101,7 +101,7 @@ const StudentsList = () => {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="İsme göre arama yap"
+                    placeholder="İsme göre ara.."
                     value={searchName}
                     onChange={(e) => setSearchName(e.target.value)}
                   />
@@ -115,7 +115,7 @@ const StudentsList = () => {
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Okul numarasına göre arama yap"
+                    placeholder="Okul numarasına göre ara.."
                     value={searchStudentNo}
                     onChange={(e) => setSearchStudentNo(e.target.value)}
                   />

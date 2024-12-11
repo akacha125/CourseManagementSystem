@@ -66,7 +66,6 @@ const NewUser = () => {
         }
     };
 
-
     const handlePhoneInputChange = (e) => {
         const { name, value } = e.target;
         let formattedValue = value;
@@ -231,6 +230,52 @@ const NewUser = () => {
                             </>
                         )}
 
+                        {selectedRole === 'teacher' && (
+                            <>
+                                <div className="mb-3">
+                                    <label htmlFor="branch" className="form-label fw-bold">Branş</label>
+                                    <select
+                                        id="branch"
+                                        name="branch"
+                                        className="form-select"
+                                        value={formData.branch}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Branş Seçin</option>
+                                        <option value="Matematik">Matematik</option>
+                                        <option value="Geometri">Geometri</option>
+                                        <option value="Fizik">Fizik</option>
+                                        <option value="Kimya">Kimya</option>
+                                        <option value="Biyoloji">Biyoloji</option>
+                                        <option value="Fen">Fen</option>
+                                        <option value="Sosyal">Sosyal</option>
+                                        <option value="Türkçe">Türkçe</option>
+                                        <option value="Edebiyat">Edebiyat</option>
+                                        <option value="Tarih">Tarih</option>
+                                        <option value="Coğrafya">Coğrafya</option>
+                                        <option value="Felsefe">Felsefe</option>
+                                        <option value="Din Kültürü">Din Kültürü</option>
+                                        <option value="İngilizce">İngilizce</option>
+                                        <option value="Almanca">Almanca</option>
+                                    </select>
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="password" className="form-label fw-bold">Şifre</label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        className="form-control"
+                                        placeholder="Şifre girin"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                            </>
+                        )}
+
                         {selectedRole && (
                             <>
                                 <div className="mb-3">
@@ -244,17 +289,19 @@ const NewUser = () => {
                                         readOnly
                                     />
                                 </div>
-                                <div className="mb-3">
-                                    <label htmlFor="password" className="form-label fw-bold">Şifre</label>
-                                    <input
-                                        type="text"
-                                        id="password"
-                                        name="password"
-                                        className="form-control"
-                                        value={formData.password}
-                                        readOnly
-                                    />
-                                </div>
+                                {selectedRole === 'student' && (
+                                    <div className="mb-3">
+                                        <label htmlFor="password" className="form-label fw-bold">Şifre</label>
+                                        <input
+                                            type="text"
+                                            id="password"
+                                            name="password"
+                                            className="form-control"
+                                            value={formData.password}
+                                            readOnly
+                                        />
+                                    </div>
+                                )}
                                 <div className="text-center mt-4">
                                     <button type="submit" className="btn btn-primary fw-bold">Kullanıcı Ekle</button>
                                 </div>

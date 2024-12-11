@@ -19,4 +19,6 @@ export const deleteStudents = (ids) => {
   return axios.post(`${API_URL}/api/deleteStudents`, { ids });
 };
 
-
+export const deleteTeachers = (ids) => {
+  return axios.post(`${API_URL}/api/deleteTeachers`, { ids });
+};
