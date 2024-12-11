@@ -11,13 +11,22 @@ const ExamsList = () => {
         // Sınav tarihlerini getir
         const fetchExamDates = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/exams/dates');
-                setExamDates(response.data);
-                if (response.data.length > 0) {
-                    setSelectedDate(response.data[0].examDate.split('T')[0]);
+                console.log('Fetching exam dates...');
+                const response = await axios.get('http://localhost:8080/api/dates');
+                console.log('Received exam dates:', response.data);
+                
+                if (response.data && response.data.length > 0) {
+                    setExamDates(response.data);
+                    const firstDate = response.data[0].examDate.split('T')[0];
+                    console.log('Setting first date:', firstDate);
+                    setSelectedDate(firstDate);
+                } else {
+                    console.log('No exam dates received');
+                    setExamDates([]);
                 }
             } catch (error) {
-                console.error('Error fetching exam dates:', error);
+                console.error('Error details:', error.response || error);
+                setExamDates([]);
             }
         };
         fetchExamDates();
@@ -28,10 +37,13 @@ const ExamsList = () => {
         const fetchExams = async () => {
             if (selectedDate) {
                 try {
-                    const response = await axios.get(`http://localhost:5000/api/exams/by-date/${selectedDate}`);
+                    console.log('Fetching exams for date:', selectedDate);
+                    const response = await axios.get(`http://localhost:8080/api/by-date/${selectedDate}`);
+                    console.log('Received exams:', response.data);
                     setExams(response.data);
                 } catch (error) {
-                    console.error('Error fetching exams:', error);
+                    console.error('Error fetching exams:', error.response || error);
+                    setExams([]);
                 }
             }
         };

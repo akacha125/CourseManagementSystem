@@ -118,16 +118,33 @@ const getExamsByDate = async (req, res) => {
 // Get all unique exam dates
 const getExamDates = async (req, res) => {
     try {
+        const connection = await db.getConnection();
+        console.log('Database connection successful');
+
         const query = `
             SELECT DISTINCT DATE(examDate) as examDate 
             FROM exams 
             ORDER BY examDate DESC`;
         
-        const [results] = await db.query(query);
+        console.log('Executing query:', query);
+        const [results] = await connection.query(query);
+        console.log('Query results:', results);
+
+        connection.release();
+        
+        if (!results || results.length === 0) {
+            console.log('No exam dates found');
+            return res.json([]);
+        }
+
+        console.log('Sending exam dates:', results);
         res.json(results);
     } catch (error) {
-        console.error('Error fetching exam dates:', error);
-        res.status(500).json({ message: 'Error fetching exam dates' });
+        console.error('Detailed error in getExamDates:', error);
+        res.status(500).json({ 
+            message: 'Error fetching exam dates',
+            error: error.message 
+        });
     }
 };
 
