@@ -1,5 +1,5 @@
 const express = require('express');
-const { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents, deleteTeachers } = require('../controllers/userController');
+const { addUser, checkStudentNoUnique, getStudents, getTeachers, deleteStudents, deleteTeachers, getStudentList } = require('../controllers/userController');
 
 const router = express.Router();
 
@@ -11,6 +11,9 @@ router.post('/check-student-no', checkStudentNoUnique);
 
 // Öğrencileri listeleme
 router.get('/students', getStudents);
+
+// Öğrenci listeleme
+router.get('/student-list', getStudentList);
 
 // Öğretmenleri listeleme
 router.get('/teachers', getTeachers);

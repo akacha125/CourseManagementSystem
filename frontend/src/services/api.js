@@ -22,3 +22,15 @@ export const deleteStudents = (ids) => {
 export const deleteTeachers = (ids) => {
   return axios.post(`${API_URL}/api/deleteTeachers`, { ids });
 };
+
+// Sınav sonucu ekleme
+export const addExam = (data) => axios.post(`${API_URL}/api/add-exam`, data);
+
+// Öğrenci numarasına göre öğrenci bilgilerini getirme
+export const getStudentInfo = (studentNo) => axios.get(`${API_URL}/api/student-info/${studentNo}`);
+
+// Tüm öğrenci numaralarını getirme
+export const getAllStudentNumbers = () => axios.get(`${API_URL}/api/student-numbers`);
+
+// Öğrenci listesini getir
+export const getStudentList = () => axios.get(`${API_URL}/api/student-list`);

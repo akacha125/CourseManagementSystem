@@ -1,18 +1,28 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
-const db = mysql.createConnection({
+// Veritabanı bağlantısını oluştur
+const db = mysql.createPool({
   host: 'localhost',
   user: 'root',
   password: 'root',
   database: 'coursemanagement',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error('MySQL bağlantı hatası:', err);
-    process.exit(1);
+// Bağlantıyı test et
+async function testConnection() {
+  try {
+    const connection = await db.getConnection();
+    console.log('MySQL bağlantısı başarılı!');
+    connection.release();
+  } catch (error) {
+    console.error('MySQL bağlantı hatası:', error);
   }
-  console.log('MySQL bağlantısı başarılı!');
-});
+}
+
+// Bağlantıyı test et
+testConnection();
 
 module.exports = db;
