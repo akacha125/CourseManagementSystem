@@ -95,8 +95,46 @@ const getAllStudentNumbers = async (req, res) => {
     }
 };
 
+// Get exams by date
+const getExamsByDate = async (req, res) => {
+    try {
+        const { date } = req.params;
+        const query = `
+            SELECT e.*, s.name as studentName, s.surname as studentSurname, 
+                   s.studentNo, s.class as studentClass
+            FROM exams e
+            JOIN students s ON e.studentId = s.id
+            WHERE DATE(e.examDate) = ?
+            ORDER BY s.studentNo`;
+        
+        const [results] = await db.query(query, [date]);
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching exams:', error);
+        res.status(500).json({ message: 'Error fetching exams' });
+    }
+};
+
+// Get all unique exam dates
+const getExamDates = async (req, res) => {
+    try {
+        const query = `
+            SELECT DISTINCT DATE(examDate) as examDate 
+            FROM exams 
+            ORDER BY examDate DESC`;
+        
+        const [results] = await db.query(query);
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching exam dates:', error);
+        res.status(500).json({ message: 'Error fetching exam dates' });
+    }
+};
+
 module.exports = {
     addExam,
     getStudentInfo,
-    getAllStudentNumbers
+    getAllStudentNumbers,
+    getExamsByDate,
+    getExamDates
 };

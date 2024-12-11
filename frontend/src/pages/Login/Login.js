@@ -78,9 +78,9 @@ function Login() {
                 required
               />
             </div>
-            <div class="form-check mb-3">
-              <label class="form-check-label">
-                <input class="form-check-input" type="checkbox" name="remember" /> Beni Hatırla
+            <div className="form-check mb-3">
+              <label className="form-check-label">
+                <input className="form-check-input" type="checkbox" name="remember" /> Beni Hatırla
               </label>
             </div>
             {error && <p className="text-danger">{error}</p>}

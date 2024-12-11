@@ -4,8 +4,8 @@ import { IoSearch } from "react-icons/io5";
 
 const NewExam = () => {
     const [studentList, setStudentList] = useState([]);
-    const [filteredStudents, setFilteredStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filteredStudents, setFilteredStudents] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [examData, setExamData] = useState({
         studentNo: '',
@@ -28,24 +28,30 @@ const NewExam = () => {
         puan: 0
     });
 
-    // Öğrenci listesini getir
+    // Doğru-Yanlış sayıları için state
+    const [answers, setAnswers] = useState({
+        turkce: { dogru: 0, yanlis: 0 },
+        sosyal: { dogru: 0, yanlis: 0 },
+        matematik: { dogru: 0, yanlis: 0 },
+        fen: { dogru: 0, yanlis: 0 },
+        fizik: { dogru: 0, yanlis: 0 },
+        kimya: { dogru: 0, yanlis: 0 },
+        biyoloji: { dogru: 0, yanlis: 0 },
+        edebiyat: { dogru: 0, yanlis: 0 },
+        tarih: { dogru: 0, yanlis: 0 },
+        cografya: { dogru: 0, yanlis: 0 },
+        felsefe: { dogru: 0, yanlis: 0 },
+        din: { dogru: 0, yanlis: 0 },
+        ingilizce: { dogru: 0, yanlis: 0 },
+        almanca: { dogru: 0, yanlis: 0 }
+    });
+
     useEffect(() => {
-        const fetchStudents = async () => {
-            try {
-                const response = await getStudentList();
-                console.log('API Response:', response.data); // Debug için log
-                setStudentList(response.data);
-                setFilteredStudents(response.data);
-            } catch (error) {
-                console.error('Öğrenci listesi alınırken hata:', error);
-            }
-        };
-        fetchStudents();
+        loadStudentList();
     }, []);
 
-    // Arama terimi değiştiğinde filtreleme yap
     useEffect(() => {
-        if (searchTerm === '') {
+        if (!searchTerm) {
             setFilteredStudents([]);
             return;
         }
@@ -61,66 +67,152 @@ const NewExam = () => {
         setFilteredStudents(filtered);
     }, [searchTerm, studentList]);
 
-    // Öğrenci seçildiğinde
+    const loadStudentList = async () => {
+        try {
+            const response = await getStudentList();
+            setStudentList(response.data);
+        } catch (error) {
+            console.error('Öğrenci listesi yüklenirken hata:', error);
+        }
+    };
+
     const handleStudentSelect = (student) => {
         setSelectedStudent(student);
         setExamData(prev => ({ ...prev, studentNo: student.studentNo }));
     };
 
-    // Sınav tipine göre gösterilecek net alanları
-    const getNetFields = () => {
+    // Net hesaplama fonksiyonu
+    const calculateNet = (dogru, yanlis) => {
+        return Math.max(0, dogru - (yanlis / 4));
+    };
+
+    // Sınav tipine göre puan hesaplama
+    const calculateScore = () => {
+        let totalScore = 0;
+        const nets = {};
+
+        // Önce tüm netleri hesapla
+        Object.keys(answers).forEach(ders => {
+            const net = calculateNet(answers[ders].dogru, answers[ders].yanlis);
+            nets[ders + 'Net'] = net;
+        });
+
+        // Sınav tipine göre puan hesapla
         switch (examData.examType) {
             case 'TYT':
-                return ['turkceNet', 'sosyalNet', 'matematikNet', 'fizikNet', 'kimyaNet', 'biyolojiNet'];
+                totalScore = (nets.turkceNet * 4) +
+                    (nets.sosyalNet * 2) +
+                    (nets.matematikNet * 4) +
+                    (nets.fizikNet * 2) +
+                    (nets.kimyaNet * 2) +
+                    (nets.biyolojiNet * 2) +
+                    100;
+                break;
+
             case 'AYT(MF)':
-                return ['matematikNet', 'fizikNet', 'kimyaNet', 'biyolojiNet'];
             case 'AYT(EA)':
-                return ['matematikNet', 'edebiyatNet', 'tarihNet', 'cografyaNet'];
             case 'AYT(Sözel)':
-                return ['sosyalNet', 'tarihNet', 'cografyaNet', 'felsefeNet', 'dinNet'];
             case 'YDT(İngilizce)':
-                return ['ingilizceNet'];
             case 'YDT(Almanca)':
-                return ['almancaNet'];
+                const totalNet = Object.values(nets).reduce((sum, net) => sum + net, 0);
+                totalScore = (totalNet * 5) + 100;
+                break;
+
             case 'LGS':
-                return ['turkceNet', 'matematikNet', 'fenNet', 'sosyalNet', 'dinNet', 'ingilizceNet'];
+                totalScore = (nets.turkceNet * 5) +
+                    (nets.matematikNet * 5) +
+                    ((nets.fenNet + nets.sosyalNet + nets.dinNet + nets.ingilizceNet) * 4) +
+                    100;
+                break;
+        }
+
+        // Netleri ve puanı state'e kaydet
+        setExamData(prev => ({
+            ...prev,
+            ...nets,
+            puan: Math.round(totalScore * 100) / 100
+        }));
+    };
+
+    // Doğru-Yanlış Input Bileşeni
+    const AnswerInput = ({ field, label }) => {
+        const handleChange = (type, value) => {
+            // Değeri string olarak al ve sayıya çevir
+            const numValue = value === '' ? 0 : parseInt(value);
+            if (!isNaN(numValue)) {
+                setAnswers(prev => ({
+                    ...prev,
+                    [field]: {
+                        ...prev[field],
+                        [type]: numValue
+                    }
+                }));
+            }
+        };
+
+        // Net hesaplama
+        const net = calculateNet(answers[field].dogru, answers[field].yanlis);
+
+        return (
+            <div className="col-md-4 mb-3">
+                <label className="form-label">{label}</label>
+                <div className="input-group">
+                    <span className="input-group-text" style={{ minWidth: '35px' }}>D:</span>
+                    <input
+                        type="text"
+                        className="form-control text-center"
+                        placeholder="0"
+                        value={answers[field].dogru || ''}
+                        onChange={(e) => handleChange('dogru', e.target.value)}
+                        style={{ maxWidth: '70px' }}
+                    />
+                    <span className="input-group-text" style={{ minWidth: '35px' }}>Y:</span>
+                    <input
+                        type="text"
+                        className="form-control text-center"
+                        placeholder="0"
+                        value={answers[field].yanlis || ''}
+                        onChange={(e) => handleChange('yanlis', e.target.value)}
+                        style={{ maxWidth: '70px' }}
+                    />
+                    <span className="input-group-text" style={{ backgroundColor: 'gray', minWidth: '80px' }}>
+                        Net: {net.toFixed(2)}
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
+    // Sınav tipine göre gösterilecek alanlar
+    const getAnswerFields = () => {
+        switch (examData.examType) {
+            case 'TYT':
+                return ['turkce', 'sosyal', 'matematik', 'fizik', 'kimya', 'biyoloji'];
+            case 'AYT(MF)':
+                return ['matematik', 'fizik', 'kimya', 'biyoloji'];
+            case 'AYT(EA)':
+                return ['matematik', 'edebiyat', 'tarih', 'cografya'];
+            case 'AYT(Sözel)':
+                return ['edebiyat', 'tarih', 'cografya', 'felsefe', 'din'];
+            case 'YDT(İngilizce)':
+                return ['ingilizce'];
+            case 'YDT(Almanca)':
+                return ['almanca'];
+            case 'LGS':
+                return ['turkce', 'matematik', 'fen', 'sosyal', 'din', 'ingilizce'];
             default:
                 return [];
         }
     };
 
-    // Net değeri değiştiğinde
-    const handleNetChange = (field, value) => {
-        setExamData(prev => ({
-            ...prev,
-            [field]: parseFloat(value) || 0
-        }));
-    };
-
-    // Puanı hesapla
-    const calculateScore = () => {
-        // Burada hesaplama.net gibi sitelerden API kullanılabilir
-        // Şimdilik basit bir hesaplama yapıyoruz
-        let totalNet = 0;
-        getNetFields().forEach(field => {
-            totalNet += examData[field];
-        });
-
-        // Basit bir puan hesaplama formülü (gerçek formül entegre edilmeli)
-        const calculatedScore = totalNet * 4;
-        setExamData(prev => ({ ...prev, puan: calculatedScore }));
-    };
-
-    // Formu gönder
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await addExam(examData);
-            alert('Sınav sonucu başarıyla eklendi!');
+            await addExam(examData);
+            alert('Sınav sonucu başarıyla kaydedildi!');
             // Formu sıfırla
-            setSelectedStudent(null);
             setExamData({
-                studentNo: '',
+                studentNo: selectedStudent?.studentNo || '',
                 examType: '',
                 examDate: '',
                 turkceNet: 0,
@@ -139,28 +231,14 @@ const NewExam = () => {
                 almancaNet: 0,
                 puan: 0
             });
+            setAnswers(Object.fromEntries(
+                Object.keys(answers).map(key => [key, { dogru: 0, yanlis: 0 }])
+            ));
         } catch (error) {
-            alert('Sınav sonucu eklenirken bir hata oluştu!');
-            console.error(error);
+            console.error('Sınav sonucu kaydedilirken hata:', error);
+            alert('Sınav sonucu eklenirken bir hata oluştu.');
         }
     };
-
-    // Net alanı bileşeni
-    const NetInput = ({ field, label }) => (
-        <div className="col-md-4 mb-3">
-            <label htmlFor={field} className="form-label">{label}</label>
-            <input
-                type="number"
-                step="0.25"
-                min="0"
-                max="40"
-                className="form-control"
-                id={field}
-                value={examData[field]}
-                onChange={(e) => handleNetChange(field, e.target.value)}
-            />
-        </div>
-    );
 
     return (
         <div className="container mt-2">
@@ -224,7 +302,13 @@ const NewExam = () => {
                                         <select
                                             className="form-select"
                                             value={examData.examType}
-                                            onChange={(e) => setExamData(prev => ({ ...prev, examType: e.target.value }))}
+                                            onChange={(e) => {
+                                                setExamData(prev => ({ ...prev, examType: e.target.value }));
+                                                // Sınav tipi değiştiğinde cevapları sıfırla
+                                                setAnswers(Object.fromEntries(
+                                                    Object.keys(answers).map(key => [key, { dogru: 0, yanlis: 0 }])
+                                                ));
+                                            }}
                                             required
                                         >
                                             <option value="">Sınav Tipi Seçin</option>
@@ -249,27 +333,27 @@ const NewExam = () => {
                                     </div>
                                 </div>
 
-                                {/* Net Bilgileri */}
+                                {/* Doğru-Yanlış Bilgileri */}
                                 {examData.examType && (
                                     <div className="row mb-4">
-                                        {getNetFields().map(field => {
+                                        {getAnswerFields().map(field => {
                                             const labels = {
-                                                turkceNet: 'Türkçe Net',
-                                                sosyalNet: 'Sosyal Net',
-                                                matematikNet: 'Matematik Net',
-                                                fenNet: 'Fen Net',
-                                                fizikNet: 'Fizik Net',
-                                                kimyaNet: 'Kimya Net',
-                                                biyolojiNet: 'Biyoloji Net',
-                                                edebiyatNet: 'Edebiyat Net',
-                                                tarihNet: 'Tarih Net',
-                                                cografyaNet: 'Coğrafya Net',
-                                                felsefeNet: 'Felsefe Net',
-                                                dinNet: 'Din Net',
-                                                ingilizceNet: 'İngilizce Net',
-                                                almancaNet: 'Almanca Net'
+                                                turkce: 'Türkçe',
+                                                sosyal: 'Sosyal',
+                                                matematik: 'Matematik',
+                                                fen: 'Fen',
+                                                fizik: 'Fizik',
+                                                kimya: 'Kimya',
+                                                biyoloji: 'Biyoloji',
+                                                edebiyat: 'Edebiyat',
+                                                tarih: 'Tarih',
+                                                cografya: 'Coğrafya',
+                                                felsefe: 'Felsefe',
+                                                din: 'Din',
+                                                ingilizce: 'İngilizce',
+                                                almanca: 'Almanca'
                                             };
-                                            return <NetInput key={field} field={field} label={labels[field]} />;
+                                            return <AnswerInput key={field} field={field} label={labels[field]} />;
                                         })}
                                     </div>
                                 )}
