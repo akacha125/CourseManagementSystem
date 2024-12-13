@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Form, Table, Button } from 'react-bootstrap';
+import { Container, Form, Table, Button, Pagination } from 'react-bootstrap';
 
 const ExamsList = () => {
     const [examDates, setExamDates] = useState([]);
@@ -9,6 +9,8 @@ const ExamsList = () => {
     const [selectedExamType, setSelectedExamType] = useState('');
     const [exams, setExams] = useState([]);
     const [selectedExams, setSelectedExams] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
 
     useEffect(() => {
         // Sınav tarihlerini getir
@@ -182,103 +184,184 @@ const ExamsList = () => {
         }
     };
 
-    return (
-        <Container className="mt-4">
-            <h2 className="mb-4">Sınav Sonuçları</h2>
-            
-            <Form.Group className="mb-2">
-                <Form.Label>Sınav Tarihi Seçin</Form.Label>
-                <Form.Control
-                    as="select"
-                    value={selectedDate}
-                    onChange={handleDateChange}
+    // Sayfalama için gerekli hesaplamalar
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentExams = exams.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(exams.length / itemsPerPage);
+
+    // Sayfa değiştirme fonksiyonu
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Pagination komponentini oluştur
+    const renderPagination = () => {
+        if (totalPages <= 1) return null;
+
+        let items = [];
+        for (let number = 1; number <= totalPages; number++) {
+            items.push(
+                <Pagination.Item
+                    key={number}
+                    active={number === currentPage}
+                    onClick={() => handlePageChange(number)}
                 >
-                    {examDates.map((date) => (
-                        <option key={date.examDate} value={date.formattedDate}>
-                            {new Date(date.examDate).toLocaleDateString('tr-TR')}
-                        </option>
-                    ))}
-                </Form.Control>
-            </Form.Group>
+                    {number}
+                </Pagination.Item>
+            );
+        }
 
-            {examTypes.length > 0 && (
-                <Form.Group className="mb-4">
-                    <Form.Label>Sınav Türü Seçin</Form.Label>
-                    <Form.Control
-                        as="select"
-                        value={selectedExamType}
-                        onChange={handleExamTypeChange}
-                    >
-                        {examTypes.map((type) => (
-                            <option key={type.examType} value={type.examType}>
-                                {type.examType}
-                            </option>
-                        ))}
-                    </Form.Control>
-                </Form.Group>
-            )}
+        return (
+            <div className="d-flex justify-content-center mt-3">
+                <Pagination>
+                    <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
+                    <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
+                    {items}
+                    <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
+                    <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
+                </Pagination>
+            </div>
+        );
+    };
 
-            {selectedExams.length > 0 && (
-                <div className="mb-3">
-                    <Button 
-                        variant="danger" 
-                        onClick={handleDeleteSelected}
-                        className="mt-2"
-                    >
-                        Seçili Sınav Sonuçlarını Sil ({selectedExams.length})
-                    </Button>
+    return (
+        <div className="container mt-2">
+            <div className="card shadow">
+                <div className="card-header text-white text-center p-2">
+                    <h4>Sınav Sonuçları</h4>
                 </div>
-            )}
+                <div className="card-body ps-4 pe-4">
+                    {/* Tarih ve Sınav Türü Seçimi */}
+                    <div className="row g-3 mb-3">
+                        <div className="col-md-4">
+                            <Form.Group>
+                                <Form.Label>Sınav Tarihi</Form.Label>
+                                <Form.Select
+                                    value={selectedDate}
+                                    onChange={handleDateChange}
+                                >
+                                    {examDates.map((date) => (
+                                        <option key={date.examDate} value={date.formattedDate}>
+                                            {new Date(date.examDate).toLocaleDateString('tr-TR')}
+                                        </option>
+                                    ))}
+                                </Form.Select>
+                            </Form.Group>
+                        </div>
 
-            <Table striped bordered hover responsive>
-                <thead>
-                    <tr>
-                        <th>
-                            <input
-                                type="checkbox"
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                        setSelectedExams(exams.map(exam => exam.id));
-                                    } else {
-                                        setSelectedExams([]);
-                                    }
-                                }}
-                                checked={selectedExams.length === exams.length && exams.length > 0}
-                            />
-                        </th>
-                        <th>Sıralama</th>
-                        <th>Öğrenci No</th>
-                        <th>Ad Soyad</th>
-                        <th>Sınıf</th>
-                        {getTableHeaders().map(header => (
-                            <th key={header.key}>{header.label}</th>
-                        ))}
-                        <th>Puan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {exams.map((exam) => (
-                        <tr key={exam.id}>
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedExams.includes(exam.id)}
-                                    onChange={() => handleCheckboxChange(exam.id)}
-                                />
-                            </td>
-                            <td>{exam.ranking}</td>
-                            <td>{exam.studentNo}</td>
-                            <td>{exam.fullname}</td>
-                            <td>{exam.class}</td>
-                            {getTableHeaders().map(header => (
-                                <td key={header.key}>{exam[header.key]}</td>
-                            ))}
-                            <td className="fw-bold">{exam.puan}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-        </Container>
+                        <div className="col-md-4">
+                            {examTypes.length > 0 && (
+                                <Form.Group>
+                                    <Form.Label>Sınav Türü</Form.Label>
+                                    <Form.Select
+                                        value={selectedExamType}
+                                        onChange={handleExamTypeChange}
+                                    >
+                                        {examTypes.map((type) => (
+                                            <option key={type.examType} value={type.examType}>
+                                                {type.examType}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            )}
+                        </div>
+
+                        <div className="col-md-4 d-flex justify-content-end align-items-end">
+                            {selectedExams.length > 0 && (
+                                <Button 
+                                    variant="danger" 
+                                    onClick={handleDeleteSelected}
+                                    className="mb-2"
+                                >
+                                    Seçili Sonuçları Sil ({selectedExams.length})
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tablo */}
+                    <div className="table-responsive">
+                        <table className="table table-striped table-hover table-bordered">
+                            <thead className="table-primary">
+                                <tr>
+                                    <th>
+                                        <input
+                                            type="checkbox"
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedExams(currentExams.map(exam => exam.id));
+                                                } else {
+                                                    setSelectedExams([]);
+                                                }
+                                            }}
+                                            checked={selectedExams.length === currentExams.length && currentExams.length > 0}
+                                        />
+                                    </th>
+                                    <th>Sıralama</th>
+                                    <th>Öğrenci No</th>
+                                    <th>Ad Soyad</th>
+                                    <th>Sınıf</th>
+                                    {getTableHeaders().map(header => (
+                                        <th key={header.key}>{header.label}</th>
+                                    ))}
+                                    <th>Puan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentExams.map((exam) => (
+                                    <tr key={exam.id}>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedExams.includes(exam.id)}
+                                                onChange={() => handleCheckboxChange(exam.id)}
+                                            />
+                                        </td>
+                                        <td>{exam.ranking}</td>
+                                        <td>{exam.studentNo}</td>
+                                        <td>{exam.fullname}</td>
+                                        <td>{exam.class}</td>
+                                        {getTableHeaders().map(header => (
+                                            <td key={header.key}>{exam[header.key]}</td>
+                                        ))}
+                                        <td className="fw-bold">{exam.puan}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="d-flex justify-content-center mt-3">
+                            <Pagination>
+                                <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
+                                <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <Pagination.Item
+                                        key={i + 1}
+                                        active={i + 1 === currentPage}
+                                        onClick={() => handlePageChange(i + 1)}
+                                    >
+                                        {i + 1}
+                                    </Pagination.Item>
+                                ))}
+                                <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
+                                <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
+                            </Pagination>
+                        </div>
+                    )}
+
+                    {exams.length === 0 && selectedExamType && (
+                        <div className="alert alert-info mt-3">
+                            Seçilen tarih ve sınav türü için sonuç bulunamadı.
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
     );
 };
 
