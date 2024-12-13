@@ -89,7 +89,14 @@ const NewUser = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await addUser(formData);
+            // Form verilerini düzenle
+            const submissionData = {
+                ...formData,
+                exam: formData.exam,     // Sınav bilgisi
+                class: formData.class    // Sınıf bilgisi
+            };
+            
+            const response = await addUser(submissionData);
             alert(response.data);
             setSelectedRole('');
             setFormData({

@@ -21,7 +21,7 @@ const addUser = async (req, res) => {
 
     // Kullanıcıyı Users tablosuna ekleyin
     const userQuery = `
-      INSERT INTO users (username, password, fullname, phoneNo, role, studentNo, exam, class, branch) 
+      INSERT INTO users (username, password, fullname, phoneNo, role, studentNo, class, exam, branch) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
@@ -33,8 +33,8 @@ const addUser = async (req, res) => {
       phoneNo,
       role,
       studentNo || null,  // Eğer öğrenci rolü değilse null
-      studentClass || null,  // Eğer öğrenci rolü değilse null
-      exam || null,  // Eğer öğrenci rolü değilse null
+      studentClass || null,  // Sınıf bilgisi
+      exam || null,  // Sınav bilgisi
       branch || null,  // Eğer öğretmen rolü değilse null
     ];
 
