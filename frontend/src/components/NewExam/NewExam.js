@@ -175,7 +175,7 @@ const NewExam = () => {
                         onChange={(e) => handleChange('yanlis', e.target.value)}
                         style={{ maxWidth: '70px' }}
                     />
-                    <span className="input-group-text" style={{ backgroundColor: 'gray', minWidth: '80px' }}>
+                    <span className="input-group-text bg-gradient" style={{ minWidth: '80px' }}>
                         Net: {net.toFixed(2)}
                     </span>
                 </div>
@@ -244,7 +244,7 @@ const NewExam = () => {
         <div className="container mt-2">
             <h2 className="text-center mb-3">Sınav Sonucu Ekleme</h2>
             <div className='row justify-content-center'>
-                <div className="card shadow col-md-8">
+                <div className="card shadow col-md-10">
                     <div className="card-body">
                         {/* Öğrenci Arama */}
                         <div className="mb-1">

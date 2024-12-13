@@ -34,3 +34,8 @@ export const getAllStudentNumbers = () => axios.get(`${API_URL}/api/student-numb
 
 // Öğrenci listesini getir
 export const getStudentList = () => axios.get(`${API_URL}/api/student-list`);
+
+// Sınav sonuçlarını silme
+export const deleteExams = async (ids) => {
+    return await axios.post(`${API_URL}/exams/delete`, { ids });
+};

@@ -192,12 +192,17 @@ const getExamsByDateAndType = async (req, res) => {
         queryDate.setHours(3, 0, 0, 0);
 
         const query = `
-            SELECT e.*, u.fullname, u.studentNo, u.class
+            SELECT 
+                e.*,
+                u.fullname,
+                u.studentNo,
+                u.class,
+                RANK() OVER (ORDER BY e.puan DESC) as ranking
             FROM exams e
             JOIN users u ON e.studentNo = u.studentNo
             WHERE DATE(e.examDate) = DATE(?)
             AND e.examType = ?
-            ORDER BY u.studentNo`;
+            ORDER BY e.puan DESC`;
         
         const [results] = await db.execute(query, [queryDate, examType]);
         console.log('Query results:', results);
@@ -208,6 +213,33 @@ const getExamsByDateAndType = async (req, res) => {
     }
 };
 
+// Sınav sonuçlarını silme
+const deleteExams = async (req, res) => {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: 'Geçersiz id listesi' });
+    }
+
+    try {
+        const placeholders = ids.map(() => '?').join(',');
+        const query = `DELETE FROM exams WHERE id IN (${placeholders})`;
+        const result = await db.executeQuery(query, ids);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Silinecek sınav sonucu bulunamadı.' });
+        }
+
+        res.status(200).json({ 
+            message: 'Sınav sonuçları başarıyla silindi',
+            deletedCount: result.affectedRows 
+        });
+    } catch (err) {
+        console.error('Sınav sonuçlarını silerken hata oluştu:', err);
+        res.status(500).json({ message: 'Silme işlemi sırasında bir hata oluştu.' });
+    }
+};
+
 module.exports = {
     addExam,
     getStudentInfo,
@@ -215,5 +247,6 @@ module.exports = {
     getExamsByDate,
     getExamDates,
     getExamTypesByDate,
-    getExamsByDateAndType
+    getExamsByDateAndType,
+    deleteExams
 };

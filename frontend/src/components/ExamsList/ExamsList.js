@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Form, Table } from 'react-bootstrap';
+import { Container, Form, Table, Button } from 'react-bootstrap';
 
 const ExamsList = () => {
     const [examDates, setExamDates] = useState([]);
@@ -8,6 +8,7 @@ const ExamsList = () => {
     const [examTypes, setExamTypes] = useState([]);
     const [selectedExamType, setSelectedExamType] = useState('');
     const [exams, setExams] = useState([]);
+    const [selectedExams, setSelectedExams] = useState([]);
 
     useEffect(() => {
         // Sınav tarihlerini getir
@@ -91,6 +92,40 @@ const ExamsList = () => {
         setSelectedExamType(newType);
     };
 
+    const handleCheckboxChange = (examId) => {
+        setSelectedExams(prev => {
+            if (prev.includes(examId)) {
+                return prev.filter(id => id !== examId);
+            } else {
+                return [...prev, examId];
+            }
+        });
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedExams.length === 0) {
+            alert('Lütfen silinecek sınav sonuçlarını seçin');
+            return;
+        }
+
+        if (window.confirm('Seçili sınav sonuçlarını silmek istediğinize emin misiniz?')) {
+            try {
+                const response = await axios.delete('http://localhost:8080/api/exams', {
+                    data: selectedExams
+                });
+                alert(response.data.message);
+                // Tabloyu güncelle
+                if (selectedDate && selectedExamType) {
+                    const updatedExams = await axios.get(`http://localhost:8080/api/by-date/${selectedDate}/${selectedExamType}`);
+                    setExams(updatedExams.data);
+                }
+                setSelectedExams([]); // Seçimleri sıfırla
+            } catch (error) {
+                alert('Sınav sonuçları silinirken bir hata oluştu.');
+            }
+        }
+    };
+
     // Sınav türüne göre tablo başlıklarını belirle
     const getTableHeaders = () => {
         switch (selectedExamType) {
@@ -151,7 +186,7 @@ const ExamsList = () => {
         <Container className="mt-4">
             <h2 className="mb-4">Sınav Sonuçları</h2>
             
-            <Form.Group className="mb-4">
+            <Form.Group className="mb-2">
                 <Form.Label>Sınav Tarihi Seçin</Form.Label>
                 <Form.Control
                     as="select"
@@ -183,9 +218,35 @@ const ExamsList = () => {
                 </Form.Group>
             )}
 
+            {selectedExams.length > 0 && (
+                <div className="mb-3">
+                    <Button 
+                        variant="danger" 
+                        onClick={handleDeleteSelected}
+                        className="mt-2"
+                    >
+                        Seçili Sınav Sonuçlarını Sil ({selectedExams.length})
+                    </Button>
+                </div>
+            )}
+
             <Table striped bordered hover responsive>
                 <thead>
                     <tr>
+                        <th>
+                            <input
+                                type="checkbox"
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setSelectedExams(exams.map(exam => exam.id));
+                                    } else {
+                                        setSelectedExams([]);
+                                    }
+                                }}
+                                checked={selectedExams.length === exams.length && exams.length > 0}
+                            />
+                        </th>
+                        <th>Sıralama</th>
                         <th>Öğrenci No</th>
                         <th>Ad Soyad</th>
                         <th>Sınıf</th>
@@ -198,13 +259,21 @@ const ExamsList = () => {
                 <tbody>
                     {exams.map((exam) => (
                         <tr key={exam.id}>
+                            <td>
+                                <input
+                                    type="checkbox"
+                                    checked={selectedExams.includes(exam.id)}
+                                    onChange={() => handleCheckboxChange(exam.id)}
+                                />
+                            </td>
+                            <td>{exam.ranking}</td>
                             <td>{exam.studentNo}</td>
                             <td>{exam.fullname}</td>
                             <td>{exam.class}</td>
                             {getTableHeaders().map(header => (
                                 <td key={header.key}>{exam[header.key]}</td>
                             ))}
-                            <td>{exam.puan}</td>
+                            <td className="fw-bold">{exam.puan}</td>
                         </tr>
                     ))}
                 </tbody>

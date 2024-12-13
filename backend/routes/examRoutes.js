@@ -6,7 +6,8 @@ const {
     getExamDates, 
     getExamsByDate,
     getExamTypesByDate,
-    getExamsByDateAndType 
+    getExamsByDateAndType,
+    deleteExams
 } = require('../controllers/examController');
 
 const router = express.Router();
@@ -28,5 +29,8 @@ router.get('/exam-types/:date', getExamTypesByDate);
 
 // Belirli bir tarih ve türdeki sınavları getirme
 router.get('/by-date/:date/:examType', getExamsByDateAndType);
+
+// Sınav silme
+router.post('/delete', deleteExams);
 
 module.exports = router;
