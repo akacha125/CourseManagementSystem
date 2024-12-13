@@ -99,15 +99,22 @@ const getAllStudentNumbers = async (req, res) => {
 const getExamsByDate = async (req, res) => {
     try {
         const { date } = req.params;
+        console.log('Requested date:', date);
+
+        // Tarihi Türkiye saat dilimine göre ayarla (UTC+3)
+        const queryDate = new Date(date);
+        queryDate.setHours(3, 0, 0, 0); // UTC+3 için saat 3'e ayarla
+        console.log('Query date:', queryDate.toISOString());
+
         const query = `
-            SELECT e.*, s.name as studentName, s.surname as studentSurname, 
-                   s.studentNo, s.class as studentClass
+            SELECT e.*, u.fullname, u.studentNo, u.class
             FROM exams e
-            JOIN students s ON e.studentId = s.id
-            WHERE DATE(e.examDate) = ?
-            ORDER BY s.studentNo`;
+            JOIN users u ON e.studentNo = u.studentNo
+            WHERE DATE(e.examDate) = DATE(?)
+            ORDER BY u.studentNo`;
         
-        const [results] = await db.query(query, [date]);
+        const [results] = await db.execute(query, [queryDate]);
+        console.log('Query results:', results);
         res.json(results);
     } catch (error) {
         console.error('Error fetching exams:', error);
@@ -122,29 +129,82 @@ const getExamDates = async (req, res) => {
         console.log('Database connection successful');
 
         const query = `
-            SELECT DISTINCT DATE(examDate) as examDate 
+            SELECT DISTINCT 
+                examDate,
+                DATE_FORMAT(examDate, '%Y-%m-%d') as formattedDate
             FROM exams 
             ORDER BY examDate DESC`;
         
         console.log('Executing query:', query);
         const [results] = await connection.query(query);
-        console.log('Query results:', results);
+        console.log('Raw exam dates:', results);
 
+        // Tarihleri UTC+3'e göre ayarla
+        const adjustedResults = results.map(result => ({
+            ...result,
+            examDate: new Date(new Date(result.examDate).getTime() + (3 * 60 * 60 * 1000)).toISOString()
+        }));
+
+        console.log('Adjusted exam dates:', adjustedResults);
         connection.release();
         
-        if (!results || results.length === 0) {
+        if (!adjustedResults || adjustedResults.length === 0) {
             console.log('No exam dates found');
             return res.json([]);
         }
 
-        console.log('Sending exam dates:', results);
-        res.json(results);
+        res.json(adjustedResults);
     } catch (error) {
         console.error('Detailed error in getExamDates:', error);
-        res.status(500).json({ 
-            message: 'Error fetching exam dates',
-            error: error.message 
-        });
+        res.status(500).json({ message: 'Error fetching exam dates' });
+    }
+};
+
+// Get exam types by date
+const getExamTypesByDate = async (req, res) => {
+    try {
+        const { date } = req.params;
+        console.log('Requested date for exam types:', date);
+
+        const query = `
+            SELECT DISTINCT examType
+            FROM exams
+            WHERE DATE(examDate) = DATE(?)
+            ORDER BY examType`;
+        
+        const [results] = await db.execute(query, [date]);
+        console.log('Exam types for date:', results);
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching exam types:', error);
+        res.status(500).json({ message: 'Error fetching exam types' });
+    }
+};
+
+// Get exams by date and type
+const getExamsByDateAndType = async (req, res) => {
+    try {
+        const { date, examType } = req.params;
+        console.log('Requested date:', date);
+        console.log('Requested exam type:', examType);
+
+        const queryDate = new Date(date);
+        queryDate.setHours(3, 0, 0, 0);
+
+        const query = `
+            SELECT e.*, u.fullname, u.studentNo, u.class
+            FROM exams e
+            JOIN users u ON e.studentNo = u.studentNo
+            WHERE DATE(e.examDate) = DATE(?)
+            AND e.examType = ?
+            ORDER BY u.studentNo`;
+        
+        const [results] = await db.execute(query, [queryDate, examType]);
+        console.log('Query results:', results);
+        res.json(results);
+    } catch (error) {
+        console.error('Error fetching exams:', error);
+        res.status(500).json({ message: 'Error fetching exams' });
     }
 };
 
@@ -153,5 +213,7 @@ module.exports = {
     getStudentInfo,
     getAllStudentNumbers,
     getExamsByDate,
-    getExamDates
+    getExamDates,
+    getExamTypesByDate,
+    getExamsByDateAndType
 };
