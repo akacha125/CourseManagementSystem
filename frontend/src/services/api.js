@@ -39,3 +39,12 @@ export const getStudentList = () => axios.get(`${API_URL}/api/student-list`);
 export const deleteExams = async (ids) => {
     return await axios.post(`${API_URL}/exams/delete`, { ids });
 };
+
+// Sınav tarihleri
+export const getExamDates = () => axios.get(`${API_URL}/api/dates`);
+
+// Belirli bir tarihteki sınav türlerini getir
+export const getExamTypesByDate = (date) => axios.get(`${API_URL}/api/exam-types/${date}`);
+
+// Belirli bir tarih ve türdeki sınavları getir
+export const getExamsByDateAndType = (date, examType) => axios.get(`${API_URL}/api/by-date/${date}/${examType}`);

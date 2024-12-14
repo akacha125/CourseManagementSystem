@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Container, Form, Table, Button, Pagination } from 'react-bootstrap';
+import { 
+    getExamDates, 
+    getExamTypesByDate, 
+    getExamsByDateAndType,
+    deleteExams 
+} from '../../services/api';
+import { Form, Button } from 'react-bootstrap';
 
 const ExamsList = () => {
     const [examDates, setExamDates] = useState([]);
@@ -17,7 +22,7 @@ const ExamsList = () => {
         const fetchExamDates = async () => {
             try {
                 console.log('Fetching exam dates...');
-                const response = await axios.get('http://localhost:8080/api/dates');
+                const response = await getExamDates();
                 console.log('Received exam dates:', response.data);
                 
                 if (response.data && response.data.length > 0) {
@@ -46,10 +51,10 @@ const ExamsList = () => {
         const fetchExamTypes = async () => {
             if (selectedDate) {
                 try {
-                    const response = await axios.get(`http://localhost:8080/api/exam-types/${selectedDate}`);
+                    const response = await getExamTypesByDate(selectedDate);
                     console.log('Received exam types:', response.data);
                     setExamTypes(response.data);
-                    if (response.data.length > 0) {
+                    if (response.data && response.data.length > 0) {
                         setSelectedExamType(response.data[0].examType);
                     } else {
                         setSelectedExamType('');
@@ -70,7 +75,7 @@ const ExamsList = () => {
             if (selectedDate && selectedExamType) {
                 try {
                     console.log('Fetching exams for date:', selectedDate, 'and type:', selectedExamType);
-                    const response = await axios.get(`http://localhost:8080/api/by-date/${selectedDate}/${selectedExamType}`);
+                    const response = await getExamsByDateAndType(selectedDate, selectedExamType);
                     console.log('Received exams:', response.data);
                     setExams(response.data);
                 } catch (error) {
@@ -112,17 +117,22 @@ const ExamsList = () => {
 
         if (window.confirm('Seçili sınav sonuçlarını silmek istediğinize emin misiniz?')) {
             try {
-                const response = await axios.delete('http://localhost:8080/api/exams', {
-                    data: selectedExams
-                });
-                alert(response.data.message);
-                // Tabloyu güncelle
+                // Use the deleteExams function from api.js
+                await deleteExams(selectedExams);
+                
+                // Refresh the exams list after deletion
                 if (selectedDate && selectedExamType) {
-                    const updatedExams = await axios.get(`http://localhost:8080/api/by-date/${selectedDate}/${selectedExamType}`);
-                    setExams(updatedExams.data);
+                    const response = await getExamsByDateAndType(selectedDate, selectedExamType);
+                    setExams(response.data);
                 }
-                setSelectedExams([]); // Seçimleri sıfırla
+                
+                // Clear selected exams
+                setSelectedExams([]);
+                
+                // Optional: Show success message
+                alert('Seçili sınav sonuçları başarıyla silindi.');
             } catch (error) {
+                console.error('Error deleting exams:', error);
                 alert('Sınav sonuçları silinirken bir hata oluştu.');
             }
         }
@@ -193,36 +203,6 @@ const ExamsList = () => {
     // Sayfa değiştirme fonksiyonu
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
-    };
-
-    // Pagination komponentini oluştur
-    const renderPagination = () => {
-        if (totalPages <= 1) return null;
-
-        let items = [];
-        for (let number = 1; number <= totalPages; number++) {
-            items.push(
-                <Pagination.Item
-                    key={number}
-                    active={number === currentPage}
-                    onClick={() => handlePageChange(number)}
-                >
-                    {number}
-                </Pagination.Item>
-            );
-        }
-
-        return (
-            <div className="d-flex justify-content-center mt-3">
-                <Pagination>
-                    <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
-                    <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
-                    {items}
-                    <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
-                    <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
-                </Pagination>
-            </div>
-        );
     };
 
     return (
@@ -335,23 +315,59 @@ const ExamsList = () => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="d-flex justify-content-center mt-3">
-                            <Pagination>
-                                <Pagination.First onClick={() => handlePageChange(1)} disabled={currentPage === 1} />
-                                <Pagination.Prev onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} />
-                                {[...Array(totalPages)].map((_, i) => (
-                                    <Pagination.Item
-                                        key={i + 1}
-                                        active={i + 1 === currentPage}
-                                        onClick={() => handlePageChange(i + 1)}
+                        <nav className="d-flex justify-content-center mt-3">
+                            <ul className="pagination">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={currentPage === 1}
                                     >
-                                        {i + 1}
-                                    </Pagination.Item>
+                                        İlk
+                                    </button>
+                                </li>
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Önceki
+                                    </button>
+                                </li>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <li 
+                                        key={i + 1} 
+                                        className={`page-item ${i + 1 === currentPage ? 'active' : ''}`}
+                                    >
+                                        <button
+                                            className="page-link"
+                                            onClick={() => handlePageChange(i + 1)}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    </li>
                                 ))}
-                                <Pagination.Next onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} />
-                                <Pagination.Last onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} />
-                            </Pagination>
-                        </div>
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Sonraki
+                                    </button>
+                                </li>
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link" 
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Son
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
                     )}
 
                     {exams.length === 0 && selectedExamType && (

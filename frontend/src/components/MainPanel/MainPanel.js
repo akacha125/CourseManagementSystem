@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Chart } from 'react-google-charts';
 import { FaUserGraduate, FaChalkboardTeacher, FaClipboardList } from 'react-icons/fa';
-import { getStudentList, getTeachers } from '../../services/api';
+import { getStudentList, getTeachers, getExamDates } from '../../services/api';
 
 const MainPanel = () => {
     const [stats, setStats] = React.useState({
@@ -17,9 +17,10 @@ const MainPanel = () => {
 
     const loadDashboardData = async () => {
         try {
-            const [students, teachers] = await Promise.all([
+            const [students, teachers, examDates] = await Promise.all([
                 getStudentList(),
-                getTeachers()
+                getTeachers(),
+                getExamDates()
             ]);
 
             const sampleExamData = [
@@ -33,7 +34,7 @@ const MainPanel = () => {
             setStats({
                 studentCount: students.data.length,
                 teacherCount: teachers.data.length,
-                examCount: 150,
+                examCount: examDates.data.length,
                 lastExamData: sampleExamData
             });
         } catch (error) {
