@@ -48,3 +48,9 @@ export const getExamTypesByDate = (date) => axios.get(`${API_URL}/api/exam-types
 
 // Belirli bir tarih ve türdeki sınavları getir
 export const getExamsByDateAndType = (date, examType) => axios.get(`${API_URL}/api/by-date/${date}/${examType}`);
+
+// Belirli bir tarihteki son sınavın öğrenci puanlarını getir
+export const getLatestExamScores = (date) => axios.get(`${API_URL}/api/latest-exam-scores/${date}`);
+
+// Son sınavın detaylarını getir
+export const getLatestExamDetails = (date) => axios.get(`${API_URL}/api/latest-exam-details/${date}`);

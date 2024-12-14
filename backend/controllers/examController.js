@@ -213,6 +213,58 @@ const getExamsByDateAndType = async (req, res) => {
     }
 };
 
+// Belirli bir tarihteki son sınavın öğrenci puanlarını getirme
+const getLatestExamScores = async (req, res) => {
+    const { date } = req.params;
+
+    const query = `
+        SELECT studentNo, puan 
+        FROM exams 
+        WHERE examDate = ? 
+        ORDER BY puan DESC
+    `;
+
+    try {
+        const [results] = await db.execute(query, [date]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Belirtilen tarihte sınav bulunamadı.' });
+        }
+
+        res.status(200).json(results);
+    } catch (err) {
+        console.error('Sınav puanları getirilirken hata oluştu:', err);
+        res.status(500).json({ message: 'Sınav puanları getirilirken bir hata oluştu.' });
+    }
+};
+
+// Son sınavın detaylarını getirme
+const getLatestExamDetails = async (req, res) => {
+    const { date } = req.params;
+
+    const query = `
+        SELECT 
+            examType, 
+            COUNT(DISTINCT studentNo) as totalStudents
+        FROM exams 
+        WHERE examDate = ?
+        GROUP BY examType
+    `;
+
+    try {
+        const [results] = await db.execute(query, [date]);
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Belirtilen tarihte sınav bulunamadı.' });
+        }
+
+        res.status(200).json(results[0]); // İlk sonucu döndür (tek bir sınav türü varsayımıyla)
+    } catch (err) {
+        console.error('Sınav detayları getirilirken hata oluştu:', err);
+        res.status(500).json({ message: 'Sınav detayları getirilirken bir hata oluştu.' });
+    }
+};
+
 // Sınav sonuçlarını silme
 const deleteExams = async (req, res) => {
     const { ids } = req.body;
@@ -248,5 +300,7 @@ module.exports = {
     getExamDates,
     getExamTypesByDate,
     getExamsByDateAndType,
+    getLatestExamScores,
+    getLatestExamDetails,
     deleteExams
 };
