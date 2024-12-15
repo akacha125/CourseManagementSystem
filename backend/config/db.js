@@ -1,48 +1,75 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// PostgreSQL connection string'i oluştur
-const connectionString = process.env.DATABASE_URL;
+let pool;
 
-// PostgreSQL bağlantısı oluştur
-const pool = new Pool({
-    connectionString: connectionString,
-    ssl: {
-        rejectUnauthorized: false
+try {
+    // Render'ın sağladığı DATABASE_URL'i kullan
+    const connectionString = process.env.DATABASE_URL;
+    
+    if (!connectionString) {
+        throw new Error('DATABASE_URL environment variable is not set');
     }
-});
+
+    pool = new Pool({
+        connectionString: connectionString,
+        ssl: {
+            rejectUnauthorized: false
+        },
+        // Bağlantı havuzu ayarları
+        max: 20, // maksimum bağlantı sayısı
+        idleTimeoutMillis: 30000, // boşta kalma süresi
+        connectionTimeoutMillis: 2000 // bağlantı zaman aşımı
+    });
+
+    console.log('PostgreSQL pool created successfully');
+} catch (error) {
+    console.error('Error creating PostgreSQL pool:', error);
+    process.exit(1); // Kritik hata, uygulamayı sonlandır
+}
 
 // Genel sorgu çalıştırma fonksiyonu
 const executeQuery = async (query, params = []) => {
-    let connection;
+    let client;
     try {
-        connection = await pool.connect();
-        const { rows } = await connection.query(query, params);
-        return rows;
+        client = await pool.connect();
+        const result = await client.query(query, params);
+        return result.rows;
     } catch (error) {
         console.error('Database query error:', error);
         throw error;
     } finally {
-        if (connection) connection.release();
+        if (client) {
+            client.release();
+        }
     }
 };
 
 // Bağlantıyı test et
 const testConnection = async () => {
+    let client;
     try {
-        const client = await pool.connect();
-        console.log('PostgreSQL connection successful!');
-        client.release();
+        client = await pool.connect();
+        await client.query('SELECT NOW()');
+        console.log('PostgreSQL connection test successful');
         return true;
     } catch (error) {
-        console.error('PostgreSQL connection error:', error);
+        console.error('PostgreSQL connection test failed:', error);
         return false;
+    } finally {
+        if (client) {
+            client.release();
+        }
     }
 };
 
-// İlk bağlantı testi
+// Uygulama başladığında bağlantıyı test et
 (async () => {
-    await testConnection();
+    try {
+        await testConnection();
+    } catch (error) {
+        console.error('Initial connection test failed:', error);
+    }
 })();
 
 // Öğrenci listesi getirme
@@ -71,5 +98,6 @@ module.exports = {
     pool,
     executeQuery,
     getStudentList,
-    getStudentInfo
+    getStudentInfo,
+    testConnection
 };
