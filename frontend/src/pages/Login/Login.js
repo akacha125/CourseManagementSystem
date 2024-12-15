@@ -1,39 +1,33 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DarkMode from "../../components/DarkMode";
 import './styles.css';
 
-function Login() {
+const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log('Login attempt:', { 
-      username,
-      apiUrl: process.env.REACT_APP_API_BASE_URL 
-    });
+    setError('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include'
+      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
+        username,
+        password
       });
 
-      console.log('Response status:', response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-
-        const decodedToken = JSON.parse(atob(data.token.split('.')[1]));
+      if (response.data.token) {
+        // Token'ı localStorage'a kaydet
+        localStorage.setItem('token', response.data.token);
+        
+        // Axios için default header'ı ayarla
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        const decodedToken = JSON.parse(atob(response.data.token.split('.')[1]));
         console.log('Decoded token:', decodedToken);
         
         if (decodedToken.role === 'admin') {
@@ -43,14 +37,9 @@ function Login() {
         } else if (decodedToken.role === 'student') {
           navigate('/student');
         } 
-      } else {
-        const errorMessage = await response.text();
-        console.error('Login error response:', errorMessage);
-        setError(errorMessage);
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Bir hata oluştu. Lütfen tekrar deneyin.');
+      setError(err.response?.data?.message || 'Giriş yapılırken bir hata oluştu');
     }
   };
 
@@ -65,7 +54,7 @@ function Login() {
         </div>
         <div className="card bg-gradient justify-content-center shadow-lg p-5 border-dark rounded-end-5" style={{ width: '600px', height: "600px" }}>
           <h4 className="text-center mb-5 fw-bold ">Kullanıcı Girişi</h4>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSubmit}>
             <div className="mb-3">
               <label htmlFor="username" className="form-label fw-bold">Kullanıcı Adı</label>
               <input
@@ -102,6 +91,6 @@ function Login() {
       </div>
     </div>
   );
-}
+};
 
 export default Login;
