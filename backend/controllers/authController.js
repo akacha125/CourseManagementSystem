@@ -1,6 +1,6 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const db = require('../db');
+const db = require('./config/db');
 const jwt = require('jsonwebtoken'); // JWT modülü
 
 const login = async (req, res) => {
@@ -8,8 +8,8 @@ const login = async (req, res) => {
 
   try {
     // Veritabanında kullanıcıyı sorgula
-    const query = 'SELECT * FROM users WHERE username = ?';
-    const [result] = await db.execute(query, [username]);
+    const query = 'SELECT * FROM users WHERE username = $1';
+    const result = await db.executeQuery(query, [username]);
 
     if (result.length === 0) {
       return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
