@@ -17,13 +17,22 @@ app.use(cors({
 app.use(express.json());
 
 // Rotalar
-app.use('/api', authRoutes);
-app.use('/api', courseRoutes);
-app.use('/api', userRoutes);
-app.use('/api', examRoutes);  // Yeni eklenen satır
+app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/exams', examRoutes);  // Yeni eklenen satır
 
 app.get('/', (req, res) => {
   res.send('Backend is running!');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        message: 'Sunucu hatası',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 const PORT = process.env.PORT || 10000;
