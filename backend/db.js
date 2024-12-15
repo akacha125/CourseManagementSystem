@@ -1,24 +1,25 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 
 // Veritabanı bağlantısını oluştur
-const db = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'coursemanagement',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const db = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT || 5432,
+  ssl: {
+    rejectUnauthorized: false // Render için gerekli olabilir
+  }
 });
 
 // Bağlantıyı test et
 async function testConnection() {
   try {
-    const connection = await db.getConnection();
-    console.log('MySQL bağlantısı başarılı!');
-    connection.release();
+    const client = await db.connect();
+    console.log('PostgreSQL bağlantısı başarılı!');
+    client.release();
   } catch (error) {
-    console.error('MySQL bağlantı hatası:', error);
+    console.error('PostgreSQL bağlantı hatası:', error);
   }
 }
 
