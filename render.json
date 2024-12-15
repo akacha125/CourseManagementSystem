@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "startCommand": "npm start",
+  "envVars": {
+    "REACT_APP_API_BASE_URL": "https://coursemanagementsystem-9sd2.onrender.com"
+  }
+}
