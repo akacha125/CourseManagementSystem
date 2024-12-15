@@ -1,6 +1,6 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const db = require('./config/db');
+const db = require('../config/db');
 const jwt = require('jsonwebtoken'); // JWT modülü
 
 const login = async (req, res) => {
