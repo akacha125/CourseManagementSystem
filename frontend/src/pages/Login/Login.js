@@ -12,6 +12,11 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    console.log('Login attempt:', { 
+      username, 
+      apiUrl: process.env.REACT_APP_API_BASE_URL 
+    });
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/login`, {
         method: 'POST',
@@ -20,6 +25,8 @@ function Login() {
         },
         body: JSON.stringify({ username, password }),
       });
+
+      console.log('Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -36,6 +43,7 @@ function Login() {
         } 
       } else {
         const errorMessage = await response.text();
+        console.error('Login error response:', errorMessage);
         setError(errorMessage);
       }
     } catch (err) {

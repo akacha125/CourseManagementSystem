@@ -29,6 +29,19 @@ const executeQuery = async (query, params = []) => {
     }
 };
 
+// Bağlantıyı test et
+const testConnection = async () => {
+    try {
+        const client = await pool.connect();
+        console.log('PostgreSQL bağlantısı başarılı!');
+        client.release();
+    } catch (error) {
+        console.error('PostgreSQL bağlantı hatası:', error);
+    }
+};
+
+testConnection();
+
 // Öğrenci listesi getirme
 const getStudentList = async () => {
     const query = `
