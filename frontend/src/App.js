@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login/Login';
-import AdminPanel from './pages/AdminPanel/AdminPanel';
-import TeacherPanel from './pages/TeacherPanel/TeacherPanel';
-import StudentPanel from './pages/StudentPanel/StudentPanel';
+import AdminDashboard from './pages/AdminDashboard';
+import TeacherDashboard from './pages/TeacherDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import PrivateRoute from './components/PrivateRoute';
 
 const App = () => {
@@ -15,7 +15,7 @@ const App = () => {
           path="/admin/*"
           element={
             <PrivateRoute role="admin">
-              <AdminPanel />
+              <AdminDashboard />
             </PrivateRoute>
           }
         />
@@ -23,7 +23,7 @@ const App = () => {
           path="/teacher/*"
           element={
             <PrivateRoute role="teacher">
-              <TeacherPanel />
+              <TeacherDashboard />
             </PrivateRoute>
           }
         />
@@ -31,7 +31,7 @@ const App = () => {
           path="/student/*"
           element={
             <PrivateRoute role="student">
-              <StudentPanel />
+              <StudentDashboard />
             </PrivateRoute>
           }
         />
