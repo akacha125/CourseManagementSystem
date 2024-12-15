@@ -1,6 +1,6 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
+const db = require('../db');
 const jwt = require('jsonwebtoken'); // JWT modülü
 
 const login = async (req, res) => {
@@ -12,7 +12,6 @@ const login = async (req, res) => {
     return res.status(400).json({ message: 'Kullanıcı adı ve şifre gereklidir' });
   }
 
-  let client;
   try {
     // Veritabanı bağlantı testi
     const isConnected = await db.testConnection();
@@ -38,20 +37,14 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
     }
 
-    // JWT secret kontrolü
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET is not set');
-    }
-
-    // Şifre eşleşti, token oluştur
+    // Token oluştur
     const token = jwt.sign(
       { 
         id: user.id, 
         username: user.username, 
         role: user.role 
       },
-      jwtSecret,
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
