@@ -1,17 +1,15 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// PostgreSQL connection string'i oluştur
+const connectionString = process.env.DATABASE_URL;
+
 // PostgreSQL bağlantısı oluştur
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-  ssl: {
-    rejectUnauthorized: false, // Render için gerekli
-    sslmode: 'require'
-  }
+    connectionString: connectionString,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Genel sorgu çalıştırma fonksiyonu
@@ -22,7 +20,7 @@ const executeQuery = async (query, params = []) => {
         const { rows } = await connection.query(query, params);
         return rows;
     } catch (error) {
-        console.error('Veritabanı sorgu hatası:', error);
+        console.error('Database query error:', error);
         throw error;
     } finally {
         if (connection) connection.release();
@@ -33,14 +31,19 @@ const executeQuery = async (query, params = []) => {
 const testConnection = async () => {
     try {
         const client = await pool.connect();
-        console.log('PostgreSQL bağlantısı başarılı!');
+        console.log('PostgreSQL connection successful!');
         client.release();
+        return true;
     } catch (error) {
-        console.error('PostgreSQL bağlantı hatası:', error);
+        console.error('PostgreSQL connection error:', error);
+        return false;
     }
 };
 
-testConnection();
+// İlk bağlantı testi
+(async () => {
+    await testConnection();
+})();
 
 // Öğrenci listesi getirme
 const getStudentList = async () => {

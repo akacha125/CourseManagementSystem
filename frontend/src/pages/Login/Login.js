@@ -13,7 +13,7 @@ function Login() {
     e.preventDefault();
 
     console.log('Login attempt:', { 
-      username, 
+      username,
       apiUrl: process.env.REACT_APP_API_BASE_URL 
     });
 
@@ -24,16 +24,18 @@ function Login() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include'
       });
 
       console.log('Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('token', data.token); // Token'ı kaydediyoruz
+        localStorage.setItem('token', data.token);
 
-        // Kullanıcıyı role göre yönlendir
         const decodedToken = JSON.parse(atob(data.token.split('.')[1]));
+        console.log('Decoded token:', decodedToken);
+        
         if (decodedToken.role === 'admin') {
           navigate('/admin/mainPanel');
         } else if (decodedToken.role === 'teacher') {
@@ -47,7 +49,7 @@ function Login() {
         setError(errorMessage);
       }
     } catch (err) {
-      console.error('Giriş işlemi sırasında bir hata oluştu:', err);
+      console.error('Login error:', err);
       setError('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
