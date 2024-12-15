@@ -1,39 +1,44 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login/Login';
+import AdminPanel from './pages/AdminPanel/AdminPanel';
+import TeacherPanel from './pages/TeacherPanel/TeacherPanel';
+import StudentPanel from './pages/StudentPanel/StudentPanel';
+import PrivateRoute from './components/PrivateRoute';
 
-import AdminDashboard from './pages/AdminDashboard';
-import MainPanel from './components/MainPanel/MainPanel';
-import StudentsList from './components/StudentsList/StudentsList';
-import TeachersList from './components/TeachersList/TeachersList';
-import ExamsList from './components/ExamsList/ExamsList';
-
-import NewUser from './components/NewUser/NewUser';
-import NewExam from './components/NewExam/NewExam';
-
-import TeacherDashboard from './pages/TeacherDashboard';
-import StudentDashboard from './pages/StudentDashboard';
-
-function App() {
+const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/admin" element={<AdminDashboard />} >
-          <Route path="mainPanel" element={<MainPanel />} />
-          <Route path="studentsList" element={<StudentsList />} />
-          <Route path="teachersList" element={<TeachersList />} />
-          <Route path="examsList" element={<ExamsList />} />
-          <Route path="newUser" element={<NewUser />} />
-          <Route path="newExam" element={<NewExam />} />
-        </Route>
-        <Route path='/teacher' element={<TeacherDashboard />} />
-        <Route path='/student' element={<StudentDashboard />} />
         <Route path="/login" element={<Login />} />
+        <Route
+          path="/admin/*"
+          element={
+            <PrivateRoute role="admin">
+              <AdminPanel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/teacher/*"
+          element={
+            <PrivateRoute role="teacher">
+              <TeacherPanel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/student/*"
+          element={
+            <PrivateRoute role="student">
+              <StudentPanel />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
-}
+};
 
 export default App;

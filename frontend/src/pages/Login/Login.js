@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DarkMode from "../../components/DarkMode";
+import api from '../../utils/axios';
 import './styles.css';
 
 const Login = () => {
@@ -15,17 +15,13 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/auth/login`, {
+      const response = await api.post('/api/auth/login', {
         username,
         password
       });
 
       if (response.data.token) {
-        // Token'ı localStorage'a kaydet
         localStorage.setItem('token', response.data.token);
-        
-        // Axios için default header'ı ayarla
-        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         
         const decodedToken = JSON.parse(atob(response.data.token.split('.')[1]));
         console.log('Decoded token:', decodedToken);
@@ -39,18 +35,21 @@ const Login = () => {
         } 
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.response?.data?.message || 'Giriş yapılırken bir hata oluştu');
     }
   };
 
   return (
     <div className="container-fluid d-flex justify-content-center align-items-center vh-100 loginBackground ">
-      <DarkMode/>
       <div className="container d-flex justify-content-center">
         <div className="card bg-dark justify-content-center shadow-lg border-dark p-5 rounded-start-5" style={{ width: '250px', height: "600px" }}>
-        <img src="/images/logo2.png" className="rounded-circle border-3-primary logo" alt="logo" />
-        <h4 className="text-center fw-bold">EGE-X</h4>
-        <h4 className="text-center mb-5 fw-bold">Kurs Merkezi Bilgi Sistemi</h4>
+          <img src="/images/logo2.png" className="rounded-circle border-3-primary logo" alt="logo" />
+          <h4 className="text-center fw-bold">EGE-X</h4>
+          <h4 className="text-center mb-5 fw-bold">Kurs Merkezi Bilgi Sistemi</h4>
+          <div className='d-flex justify-content-center align-items-center'>
+            <DarkMode />
+          </div>
         </div>
         <div className="card bg-gradient justify-content-center shadow-lg p-5 border-dark rounded-end-5" style={{ width: '600px', height: "600px" }}>
           <h4 className="text-center mb-5 fw-bold ">Kullanıcı Girişi</h4>
@@ -82,7 +81,11 @@ const Login = () => {
                 <input className="form-check-input" type="checkbox" name="remember" /> Beni Hatırla
               </label>
             </div>
-            {error && <p className="text-danger">{error}</p>}
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
             <div className='d-flex justify-content-center align-items-center'>
               <button type="submit" className="btn btn-dark btn-outline-light w-50 mt-4 ">Giriş Yap</button>
             </div>
