@@ -1,162 +1,174 @@
 const bcrypt = require('bcryptjs');
-const db = require('../config/db');
+const db = require('../db');
 
 // Yeni kullanıcı ekleme
 const addUser = async (req, res) => {
-  const {
-    username,
-    password,
-    fullname,
-    phoneNo,
-    role,
-    studentNo,
-    class: studentClass,
-    exam,
-    branch
-  } = req.body;
+    const { username, password, fullname, phoneNo, role, studentNo } = req.body;
 
-  try {
-    // Şifreyi hash'leyin
-    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        // Şifreyi hash'le
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Kullanıcıyı Users tablosuna ekleyin
-    const userQuery = `
-      INSERT INTO users (username, password, fullname, phoneNo, role, studentNo, class, exam, branch) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    // Parametreler
-    const params = [
-      username,
-      hashedPassword,
-      fullname,
-      phoneNo,
-      role,
-      studentNo || null,  // Eğer öğrenci rolü değilse null
-      studentClass || null,  // Sınıf bilgisi
-      exam || null,  // Sınav bilgisi
-      branch || null,  // Eğer öğretmen rolü değilse null
-    ];
+        let query, params;
 
-    await db.executeQuery(userQuery, params);
-    res.status(201).json({ message: 'Kullanıcı başarıyla eklendi!' });
-  } catch (err) {
-    console.error('Kullanıcı eklerken hata oluştu:', err);
-    res.status(500).json({ message: 'Kullanıcı ekleme sırasında bir hata oluştu.' });
-  }
+        if (role === 'student') {
+            query = `
+                INSERT INTO users (username, password, fullname, phone_no, role, student_no)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id, username, fullname, role
+            `;
+            params = [username, hashedPassword, fullname, phoneNo, role, studentNo];
+        } else {
+            query = `
+                INSERT INTO users (username, password, fullname, phone_no, role)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id, username, fullname, role
+            `;
+            params = [username, hashedPassword, fullname, phoneNo, role];
+        }
+
+        const result = await db.executeQuery(query, params);
+        res.status(201).json({
+            message: 'Kullanıcı başarıyla oluşturuldu',
+            user: result[0]
+        });
+    } catch (error) {
+        console.error('Kullanıcı ekleme hatası:', error);
+        res.status(500).json({ message: 'Kullanıcı eklenirken bir hata oluştu' });
+    }
 };
 
-// Öğrenci Numarasının Benzersizliğini Kontrol Et
+// Öğrenci numarasının benzersizliğini kontrol et
 const checkStudentNoUnique = async (req, res) => {
-  const { studentNo } = req.body;
+    const { studentNo } = req.query;
 
-  try {
-    const query = 'SELECT COUNT(*) AS count FROM users WHERE studentNo = ?';
-    const result = await db.executeQuery(query, [studentNo]);
-    const isUnique = result[0].count === 0;
-    res.status(200).json({ isUnique });
-  } catch (err) {
-    console.error('Öğrenci numarasını kontrol ederken hata oluştu:', err);
-    res.status(500).json({ message: 'Hata oluştu.' });
-  }
+    try {
+        const result = await db.executeQuery(
+            'SELECT EXISTS(SELECT 1 FROM users WHERE student_no = $1)',
+            [studentNo]
+        );
+        res.json({ exists: result[0].exists });
+    } catch (error) {
+        console.error('Öğrenci no kontrolü hatası:', error);
+        res.status(500).json({ message: 'Kontrol sırasında bir hata oluştu' });
+    }
 };
 
 // Öğrencileri listeleme
 const getStudents = async (req, res) => {
-  try {
-    const query = 'SELECT * FROM users WHERE role = ?'; 
-    const result = await db.executeQuery(query, ['student']);
-    res.status(200).json(result);
-  } catch (err) {
-    console.error('Öğrencileri getirirken hata oluştu:', err);
-    res.status(500).json({ message: 'Öğrencileri getirme sırasında bir hata oluştu.' });
-  }
+    try {
+        const result = await db.executeQuery(
+            'SELECT id, username, fullname, phone_no, student_no FROM users WHERE role = $1',
+            ['student']
+        );
+        res.json(result);
+    } catch (error) {
+        console.error('Öğrenci listesi hatası:', error);
+        res.status(500).json({ message: 'Öğrenciler listelenirken bir hata oluştu' });
+    }
 };
 
 // Öğretmenleri listeleme
 const getTeachers = async (req, res) => {
-  try {
-    const query = 'SELECT * FROM users WHERE role = ?'; 
-    const result = await db.executeQuery(query, ['teacher']);
-    res.status(200).json(result);
-  } catch (err) {
-    console.error('Öğretmenleri getirirken hata oluştu:', err);
-    res.status(500).json({ message: 'Öğretmenleri getirme sırasında bir hata oluştu.' });
-  }
+    try {
+        const result = await db.executeQuery(
+            'SELECT id, username, fullname, phone_no FROM users WHERE role = $1',
+            ['teacher']
+        );
+        res.json(result);
+    } catch (error) {
+        console.error('Öğretmen listesi hatası:', error);
+        res.status(500).json({ message: 'Öğretmenler listelenirken bir hata oluştu' });
+    }
 };
 
 // Öğrencileri silme
 const deleteStudents = async (req, res) => {
-  const { ids } = req.body;
+    const { ids } = req.body;
 
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ message: 'Geçersiz id listesi' });
-  }
+    try {
+        const result = await db.executeQuery(
+            'DELETE FROM users WHERE id = ANY($1::int[]) AND role = $2 RETURNING id',
+            [ids, 'student']
+        );
 
-  try {
-    const query = `DELETE FROM users WHERE id IN (${ids.map(() => '?').join(',')})`;
-    const result = await db.executeQuery(query, ids);
-    res.status(200).json({ message: `${result.affectedRows} öğrenci silindi.` });
-  } catch (err) {
-    console.error('Öğrencileri silerken hata oluştu:', err);
-    res.status(500).json({ message: 'Silme işlemi sırasında hata oluştu.' });
-  }
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Silinecek öğrenci bulunamadı' });
+        }
+
+        res.json({ message: 'Öğrenciler başarıyla silindi', deletedIds: result.map(r => r.id) });
+    } catch (error) {
+        console.error('Öğrenci silme hatası:', error);
+        res.status(500).json({ message: 'Öğrenciler silinirken bir hata oluştu' });
+    }
 };
 
 // Öğretmenleri silme
 const deleteTeachers = async (req, res) => {
-  const { ids } = req.body;
+    const { ids } = req.body;
 
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return res.status(400).json({ message: 'Geçersiz id listesi' });
-  }
+    try {
+        // Önce öğretmenlerin aktif kurslarını kontrol et
+        const activeCourses = await db.executeQuery(
+            'SELECT DISTINCT u.id, u.fullname FROM users u INNER JOIN courses c ON u.id = c.instructor_id WHERE u.id = ANY($1::int[])',
+            [ids]
+        );
 
-  try {
-    const placeholders = ids.map(() => '?').join(',');
-    const query = `DELETE FROM users WHERE id IN (${placeholders}) AND role = 'teacher'`;
-    const result = await db.executeQuery(query, ids);
+        if (activeCourses.length > 0) {
+            return res.status(400).json({
+                message: 'Bazı öğretmenlerin aktif kursları var',
+                teachers: activeCourses.map(t => ({ id: t.id, fullname: t.fullname }))
+            });
+        }
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Silinecek öğretmen bulunamadı.' });
+        const result = await db.executeQuery(
+            'DELETE FROM users WHERE id = ANY($1::int[]) AND role = $2 RETURNING id',
+            [ids, 'teacher']
+        );
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Silinecek öğretmen bulunamadı' });
+        }
+
+        res.json({ message: 'Öğretmenler başarıyla silindi', deletedIds: result.map(r => r.id) });
+    } catch (error) {
+        console.error('Öğretmen silme hatası:', error);
+        res.status(500).json({ message: 'Öğretmenler silinirken bir hata oluştu' });
     }
-
-    res.status(200).json({ 
-      message: 'Öğretmenler başarıyla silindi',
-      deletedCount: result.affectedRows 
-    });
-  } catch (err) {
-    console.error('Öğretmenleri silerken hata oluştu:', err);
-    res.status(500).json({ message: 'Öğretmenleri silme sırasında bir hata oluştu.' });
-  }
 };
 
 // Tüm öğrencileri getir
 const getStudentList = async (req, res) => {
-  try {
-    const students = await db.getStudentList();
-    
-    if (students.length === 0) {
-      return res.status(404).json({ 
-        message: 'Sistemde kayıtlı öğrenci bulunamadı' 
-      });
-    }
+    try {
+        const result = await db.executeQuery(`
+            SELECT 
+                u.id,
+                u.username,
+                u.fullname,
+                u.phone_no,
+                u.student_no,
+                COUNT(e.course_id) as enrolled_courses
+            FROM users u
+            LEFT JOIN enrollments e ON u.id = e.student_id
+            WHERE u.role = $1
+            GROUP BY u.id
+            ORDER BY u.id ASC
+        `, ['student']);
 
-    res.json(students);
-  } catch (error) {
-    console.error('Öğrenci listesi alınırken hata:', error);
-    res.status(500).json({ 
-      message: 'Öğrenci listesi alınırken bir hata oluştu',
-      error: error.message 
-    });
-  }
+        res.json(result);
+    } catch (error) {
+        console.error('Öğrenci listesi hatası:', error);
+        res.status(500).json({ message: 'Öğrenci listesi alınırken bir hata oluştu' });
+    }
 };
 
-module.exports = { 
-  addUser, 
-  checkStudentNoUnique, 
-  getStudents, 
-  getTeachers, 
-  deleteStudents, 
-  deleteTeachers, 
-  getStudentList 
+module.exports = {
+    addUser,
+    checkStudentNoUnique,
+    getStudents,
+    getTeachers,
+    deleteStudents,
+    deleteTeachers,
+    getStudentList
 };
