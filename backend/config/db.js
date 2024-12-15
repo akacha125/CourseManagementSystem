@@ -4,32 +4,40 @@ require('dotenv').config();
 let pool;
 
 try {
-    // Render'ın sağladığı DATABASE_URL'i kullan
-    const connectionString = process.env.DATABASE_URL;
+    // Önce DATABASE_URL'i kontrol et, yoksa diğer env variables'ları kullan
+    const connectionString = process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
     
-    if (!connectionString) {
-        throw new Error('DATABASE_URL environment variable is not set');
-    }
+    console.log('Attempting to connect to PostgreSQL with:', {
+        usingConnectionString: !!process.env.DATABASE_URL,
+        host: process.env.DB_HOST,
+        database: process.env.DB_NAME,
+        port: process.env.DB_PORT
+    });
 
     pool = new Pool({
         connectionString: connectionString,
-        ssl: {
+        ssl: process.env.NODE_ENV === 'production' ? {
             rejectUnauthorized: false
-        },
+        } : false,
         // Bağlantı havuzu ayarları
-        max: 20, // maksimum bağlantı sayısı
-        idleTimeoutMillis: 30000, // boşta kalma süresi
-        connectionTimeoutMillis: 2000 // bağlantı zaman aşımı
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 2000
     });
 
     console.log('PostgreSQL pool created successfully');
 } catch (error) {
     console.error('Error creating PostgreSQL pool:', error);
-    process.exit(1); // Kritik hata, uygulamayı sonlandır
+    // Hata durumunda uygulamayı sonlandırma, sadece loglama yap
+    console.error('Database connection failed, but application will continue');
 }
 
 // Genel sorgu çalıştırma fonksiyonu
 const executeQuery = async (query, params = []) => {
+    if (!pool) {
+        throw new Error('Database pool not initialized');
+    }
+
     let client;
     try {
         client = await pool.connect();
@@ -47,6 +55,11 @@ const executeQuery = async (query, params = []) => {
 
 // Bağlantıyı test et
 const testConnection = async () => {
+    if (!pool) {
+        console.error('Database pool not initialized');
+        return false;
+    }
+
     let client;
     try {
         client = await pool.connect();
@@ -66,9 +79,12 @@ const testConnection = async () => {
 // Uygulama başladığında bağlantıyı test et
 (async () => {
     try {
-        await testConnection();
+        const isConnected = await testConnection();
+        if (!isConnected) {
+            console.error('Initial database connection test failed');
+        }
     } catch (error) {
-        console.error('Initial connection test failed:', error);
+        console.error('Error during initial connection test:', error);
     }
 })();
 
