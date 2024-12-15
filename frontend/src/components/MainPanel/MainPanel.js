@@ -154,7 +154,7 @@ const MainPanel = () => {
                                             textStyle: { color: '#ffffff' },
                                             titleTextStyle: { color: '#ffffff' }
                                         },
-                                        bar: { groupWidth: '75%' },
+                                        bar: { groupWidth: '40%' },
                                         legend: { position: 'none' },
                                         titleTextStyle: { color: '#ffffff' }
                                     }}
